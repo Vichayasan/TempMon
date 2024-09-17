@@ -31,6 +31,7 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 void enterDetailsCallback(Control *sender, int type);
 void sendAttribute();
 void reconnectMqtt();
+void heartBeat();
 
 #define WIFI_AP ""
 #define WIFI_PASSWORD ""
@@ -40,6 +41,8 @@ String OTAhostname = "GreenIOV3.1-TempMon-1";
 #define PASSWORD "green7650"
 
 #define WDTPin 4
+#define trigWDTPin 33
+#define ledHeartPIN 0
 
 String deviceToken = "4c:75:25:56:a1:84";
 char thingsboardServer[] = "tb.thingcontrol.io";
@@ -273,7 +276,7 @@ void readEEPROM() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.4";
+  FirmwareVer = "0.5";
   Serial.begin(115200);
   Wire.begin();
   sht31.begin(0x44);
@@ -300,6 +303,10 @@ void setup() {
 void loop() {
   
   // Always check WiFi status and reconnect if necessary
+  if ((millis() % 10000) == 0) 
+  {
+    heartBeat();
+  }
   
    const unsigned long time2send = periodSendTelemetry * 1000;
   // Check telemetry timing
@@ -380,84 +387,20 @@ void sendAttribute(){
   client.publish( "v1/devices/me/attributes", char_array);
 }
 
-void setupOTA()
+void heartBeat()
 {
-  //Port defaults to 8266
-  //ArduinoOTA.setPort(8266);
+  //   Sink current to drain charge from watchdog circuit
+  pinMode(trigWDTPin, OUTPUT);
+  digitalWrite(trigWDTPin, LOW);
 
-  //Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setHostname(OTAhostname.c_str());
+  // Led monitor for Heartbeat
+  digitalWrite(ledHeartPIN, LOW);
+  delay(100);
+  digitalWrite(ledHeartPIN, HIGH);
 
-  //No authentication by default
-  ArduinoOTA.setPassword(PASSWORD);
+  // Return to high-Z
+  pinMode(trigWDTPin, INPUT);
 
-  //Password can be set with it's md5 value as well
-  //MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
-  //ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
-
-  ArduinoOTA.onStart([]()
-  {
-    Serial.println("Start Updating....");
-
-    Serial.printf("Start Updating....Type:%s\n", (ArduinoOTA.getCommand() == U_FLASH) ? "sketch" : "filesystem");
-  });
-
-  ArduinoOTA.onEnd([]()
-  {
-
-    Serial.println("Update Complete!");
-    //  SerialBT.println("Update Complete!");
-    ESP.restart();
-  });
-
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
-  {
-    String pro = String(progress / (total / 100)) + "%";
-    int progressbar = (progress / (total / 100));
-    //int progressbar = (progress / 5) % 100;
-    //int pro = progress / (total / 100);
-
-
-    //  SerialBT.printf("Progress: %u%%\n", (progress / (total / 100)));
-    Serial.printf("Progress: %u%%\n", (progress / (total / 100)));
-  });
-
-  ArduinoOTA.onError([](ota_error_t error)
-  {
-    Serial.printf("Error[%u]: ", error);
-    String info = "Error Info:";
-    switch (error)
-    {
-      case OTA_AUTH_ERROR:
-        info += "Auth Failed";
-        Serial.println("Auth Failed");
-        break;
-
-      case OTA_BEGIN_ERROR:
-        info += "Begin Failed";
-        Serial.println("Begin Failed");
-        break;
-
-      case OTA_CONNECT_ERROR:
-        info += "Connect Failed";
-        Serial.println("Connect Failed");
-        break;
-
-      case OTA_RECEIVE_ERROR:
-        info += "Receive Failed";
-        Serial.println("Receive Failed");
-        break;
-
-      case OTA_END_ERROR:
-        info += "End Failed";
-        Serial.println("End Failed");
-        break;
-    }
-
-
-    Serial.println(info);
-    ESP.restart();
-  });
-
-  ArduinoOTA.begin();
+  Serial.println("Heartbeat");
+  // SerialBT.println("Heartbeat");
 }
