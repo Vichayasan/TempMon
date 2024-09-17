@@ -17,8 +17,8 @@
 //#include "REG_CONFIG.h"
 //#include <HardwareSerial.h>
 //#include <BME280I2C.h>
-#include <SHT2x.h>
-SHT2x sht;
+#include "Adafruit_SHT31.h"
+Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
 #include <ESPUI.h>
 #include <ESPmDNS.h>
@@ -273,11 +273,10 @@ void readEEPROM() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.3";
+  FirmwareVer = "0.4";
   Serial.begin(115200);
-  //  Wire.begin();
-  sht.begin();
-  uint8_t stat = sht.getStatus();
+  Wire.begin();
+  sht31.begin(0x44);
   Serial.println(F("Starting... SHT20 TEMP/HUM_RS485 Monitor"));
   wifiManager.setAPCallback(configModeCallback);
   if (!wifiManager.autoConnect("SmartEnv:4c:75:25:56:a1:84")) {
@@ -318,11 +317,8 @@ void loop() {
       Serial.println("WiFi disconnected");
     }
     Serial.println("Sending telemetry...");
-    u32_t start = micros();
-    sht.read();
-    u32_t stop = micros();
-    temp = sht.getTemperature() + (TempOffset / 100);
-    hum = sht.getHumidity() + (HumOffset1 / 100);
+    temp = sht31.readTemperature() + (TempOffset / 100);
+    hum = sht31.readHumidity() + (HumOffset1 / 100);
     json.concat("{\"temp\":");
     //  json.concat("33");
     json.concat(String(temp));
