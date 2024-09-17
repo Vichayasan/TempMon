@@ -30,6 +30,7 @@ Adafruit_SHT31 sht31 = Adafruit_SHT31();
 
 void enterDetailsCallback(Control *sender, int type);
 void sendAttribute();
+void processAtt(char jsonAtt[]);
 void reconnectMqtt();
 void heartBeat();
 void Task1code(void *pvParameters);
@@ -201,7 +202,7 @@ void enterDetailsCallback(Control *sender, int type) {
     // Write to EEPROM
     EEPROM.begin(100); // Ensure enough size for data
     int addr = 0;
-  
+
     EEPROM.put(addr, TempOffset);
     addr += sizeof(TempOffset);
     EEPROM.put(addr, HumOffset1);
@@ -282,7 +283,7 @@ void readEEPROM() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.7";
+  FirmwareVer = "0.8";
   Serial.begin(115200);
   Wire.begin();
   sht31.begin(0x44);
@@ -385,7 +386,16 @@ void sendAttribute(){
   char char_array[str_len];
   // Copy it over
   json.toCharArray(char_array, str_len);
-  client.publish( "v1/devices/me/attributes", char_array);
+  processAtt(char_array);
+}
+
+void processAtt(char jsonAtt[])
+{
+  char *aString = jsonAtt;
+  Serial.println("OK");
+  Serial.print(F("+:topic v1/devices/me/attributes , "));
+  Serial.println(aString);
+  client.publish( "v1/devices/me/attributes", aString);
 }
 
 void heartBeat()
