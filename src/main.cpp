@@ -272,8 +272,8 @@ void readEEPROM() {
 }
 
 void setup() {
-  Project = "HTTPS_OTA_ESP32";
-  FirmwareVer = "0.2";
+  Project = "TempMon";
+  FirmwareVer = "0.1";
   Serial.begin(115200);
   Wire.begin();
   sht.begin();
