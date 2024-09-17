@@ -273,10 +273,11 @@ void readEEPROM() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.2";
+  FirmwareVer = "0.3";
   Serial.begin(115200);
-  Wire.begin();
+  //  Wire.begin();
   sht.begin();
+  uint8_t stat = sht.getStatus();
   Serial.println(F("Starting... SHT20 TEMP/HUM_RS485 Monitor"));
   wifiManager.setAPCallback(configModeCallback);
   if (!wifiManager.autoConnect("SmartEnv:4c:75:25:56:a1:84")) {
@@ -317,7 +318,9 @@ void loop() {
       Serial.println("WiFi disconnected");
     }
     Serial.println("Sending telemetry...");
+    u32_t start = micros();
     sht.read();
+    u32_t stop = micros();
     temp = sht.getTemperature() + (TempOffset / 100);
     hum = sht.getHumidity() + (HumOffset1 / 100);
     json.concat("{\"temp\":");
@@ -336,7 +339,6 @@ void loop() {
     json.toCharArray(char_array, str_len);
     client.publish( "v1/devices/me/telemetry", char_array);
     //sendtelemetry();  // Function to send the telemetry data
-    Serial.println("test OTA3");
     Serial.println("Telemetry sent");
   }
 }
