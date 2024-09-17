@@ -32,13 +32,12 @@ void enterDetailsCallback(Control *sender, int type);
 void sendAttribute();
 void reconnectMqtt();
 void heartBeat();
+void Task1code(void *pvParameters);
 
 #define WIFI_AP ""
 #define WIFI_PASSWORD ""
-#define HOSTNAME "AIS-IoT-TempMon-1"
+#define HOSTNAME "SmartEnv:4c:75:25:56:a1:84"
 #define FORCE_USE_HOTSPOT 0
-String OTAhostname = "GreenIOV3.1-TempMon-1";
-#define PASSWORD "green7650"
 
 #define WDTPin 4
 #define trigWDTPin 33
@@ -276,7 +275,7 @@ void readEEPROM() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.5";
+  FirmwareVer = "0.6";
   Serial.begin(115200);
   Wire.begin();
   sht31.begin(0x44);
@@ -297,20 +296,13 @@ void setup() {
   delay(200);
   readEEPROM();
   Serial.println("debugendSetUP");
-  
+  xTaskCreate(Task1code, "Task1", 10000, NULL, tskIDLE_PRIORITY, NULL);
 }
 
-void loop() {
-  
-  // Always check WiFi status and reconnect if necessary
-  if ((millis() % 10000) == 0) 
-  {
-    heartBeat();
-  }
-  
+void loop() {  
    const unsigned long time2send = periodSendTelemetry * 1000;
   // Check telemetry timing
-  if (millis() % 60000 == 0) {
+  if (millis() % time2send == 0) {
     OTA_git_CALL();
     json = "";
     status = WiFi.status();
@@ -385,6 +377,18 @@ void sendAttribute(){
   // Copy it over
   json.toCharArray(char_array, str_len);
   client.publish( "v1/devices/me/attributes", char_array);
+}
+
+void Task1code(void *pvParameters)
+{
+
+  for (;;)
+  {
+    //    Serial.print("Task1 running on core ");
+    //    Serial.println(xPortGetCoreID());
+    //    heartBeat();
+    vTaskDelay((2000) / portTICK_PERIOD_MS);
+  }
 }
 
 void heartBeat()
