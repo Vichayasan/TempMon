@@ -273,7 +273,7 @@ void readEEPROM() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.1";
+  FirmwareVer = "0.2";
   Serial.begin(115200);
   Wire.begin();
   sht.begin();
