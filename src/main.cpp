@@ -273,7 +273,7 @@ void readEEPROM() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.1";
+  FirmwareVer = "0.2";
   Serial.begin(115200);
   Wire.begin();
   sht.begin();
@@ -336,7 +336,7 @@ void loop() {
     json.toCharArray(char_array, str_len);
     client.publish( "v1/devices/me/telemetry", char_array);
     //sendtelemetry();  // Function to send the telemetry data
-    Serial.println("test OTA2");
+    Serial.println("test OTA3");
     Serial.println("Telemetry sent");
   }
 }
