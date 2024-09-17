@@ -200,7 +200,7 @@ void enterDetailsCallback(Control *sender, int type) {
 
 
     // Write to EEPROM
-    EEPROM.begin(100); // Ensure enough size for data
+    EEPROM.begin(150); // Ensure enough size for data
     int addr = 0;
 
     EEPROM.put(addr, TempOffset);
@@ -208,12 +208,13 @@ void enterDetailsCallback(Control *sender, int type) {
     EEPROM.put(addr, HumOffset1);
     addr += sizeof(HumOffset1);
     EEPROM.put(addr, periodSendTelemetry);
-    addr += sizeof(periodSendTelemetry);
+    //  addr += sizeof(periodSendTelemetry);
+    addr = 30;
     for (int len = 0; len < email1.length(); len++) {
       EEPROM.write(addr + len, data1[len]);  // Write each character
     }
     EEPROM.write(addr + email1.length(), '\0');  // Add null terminator at the end
-    addr += sizeof(email1.length()) + 1;
+    addr = 50;
     for (int len = 0; len < lineID.length(); len++) {
       EEPROM.write(addr + len, data2[len]);  // Write each character
     }
@@ -255,13 +256,15 @@ void readEEPROM() {
     EEPROM.get(addr, HumOffset1);
     addr += sizeof(HumOffset1);
     EEPROM.get(addr, periodSendTelemetry);
-    addr += sizeof(periodSendTelemetry);
+    //  addr += sizeof(periodSendTelemetry);
+    addr = 30;
     for (int len = 0; len < 50; len++){
       char data1 = EEPROM.read(addr + len);
       if(data1 == '\0' || data1 == 255) break;
       email1 += data1;
     }
-    addr += sizeof(email1);
+    //  addr += sizeof(email1);
+    addr = 50;
     for (int len = 0; len < 50; len++){
       char data2 = EEPROM.read(addr + len);
       if(data2 == '\0' || data2 == 255) break;
@@ -283,7 +286,7 @@ void readEEPROM() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.9";
+  FirmwareVer = "1.0";
   Serial.begin(115200);
   Wire.begin();
   sht31.begin(0x44);
