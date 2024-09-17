@@ -260,6 +260,12 @@ void readEEPROM() {
       if(data1 == '\0' || data1 == 255) break;
       email1 += data1;
     }
+    addr += sizeof(email1);
+    for (int len = 0; len < 50; len++){
+      char data2 = EEPROM.read(addr + len);
+      if(data2 == '\0' || data2 == 255) break;
+      lineID += data2;
+    }
     EEPROM.end();
   // Print to Serial
   Serial.println("get TempOffset: " + String(TempOffset));
@@ -271,11 +277,12 @@ void readEEPROM() {
   ESPUI.updateNumber(humText, HumOffset1);
   ESPUI.updateNumber(interval, periodSendTelemetry);
   ESPUI.updateText(emailText1, String(email1));
+  ESPUI.updateText(lineText, String(lineID));
 }
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.6";
+  FirmwareVer = "0.7";
   Serial.begin(115200);
   Wire.begin();
   sht31.begin(0x44);
@@ -296,7 +303,6 @@ void setup() {
   delay(200);
   readEEPROM();
   Serial.println("debugendSetUP");
-  xTaskCreate(Task1code, "Task1", 10000, NULL, tskIDLE_PRIORITY, NULL);
 }
 
 void loop() {  
@@ -335,6 +341,9 @@ void loop() {
     client.publish( "v1/devices/me/telemetry", char_array);
     //sendtelemetry();  // Function to send the telemetry data
     Serial.println("Telemetry sent");
+  }
+   if (millis() % 10000 == 0) {
+    heartBeat();
   }
 }
 
@@ -377,18 +386,6 @@ void sendAttribute(){
   // Copy it over
   json.toCharArray(char_array, str_len);
   client.publish( "v1/devices/me/attributes", char_array);
-}
-
-void Task1code(void *pvParameters)
-{
-
-  for (;;)
-  {
-    //    Serial.print("Task1 running on core ");
-    //    Serial.println(xPortGetCoreID());
-    //    heartBeat();
-    vTaskDelay((2000) / portTICK_PERIOD_MS);
-  }
 }
 
 void heartBeat()
