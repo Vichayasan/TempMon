@@ -213,7 +213,7 @@ void enterDetailsCallback(Control *sender, int type) {
       EEPROM.write(addr + len, data1[len]);  // Write each character
     }
     EEPROM.write(addr + email1.length(), '\0');  // Add null terminator at the end
-    
+    addr += sizeof(email1.length()) + 1;
     for (int len = 0; len < lineID.length(); len++) {
       EEPROM.write(addr + len, data2[len]);  // Write each character
     }
@@ -283,7 +283,7 @@ void readEEPROM() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "0.8";
+  FirmwareVer = "0.9";
   Serial.begin(115200);
   Wire.begin();
   sht31.begin(0x44);
