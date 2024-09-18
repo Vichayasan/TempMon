@@ -56,7 +56,7 @@ int periodSendTelemetry = 60;  //the value is a number of seconds
 
 //UI handles
 uint16_t wifi_ssid_text, wifi_pass_text;
-uint16_t nameLabel, idLabel, grouplabel, grouplabel2, mainSwitcher, mainSlider, mainText, settingZNumber, resultButton, mainTime, downloadButton, selectDownload, logStatus;
+uint16_t nameLabel, idLabel, firmwarelabel, grouplabel2, mainSwitcher, mainSlider, mainText, settingZNumber, resultButton, mainTime, downloadButton, selectDownload, logStatus;
 //  uint16_t styleButton, styleLabel, styleSwitcher, styleSlider, styleButton2, styleLabel2, styleSlider2;
 uint16_t tempText, humText, humText2, saveConfigButton, interval ,emailText1, cuationlabel, lineText;
 uint16_t shtLog, wifiLog, teleLog;
@@ -125,6 +125,7 @@ void setUpUI() {
   auto maintab = ESPUI.addControl(Tab, "", "Home");
   nameLabel = ESPUI.addControl(Label, "Device Name", "TempMon 1", Emerald, maintab);
   idLabel = ESPUI.addControl(Label, "Device ID", String(deviceToken), Emerald, maintab);
+  firmwarelabel = ESPUI.addControl(Label, "Firmware", String(FirmwareVer), Emerald, maintab);
 
   auto settingTab = ESPUI.addControl(Tab, "", "Setting");
   ESPUI.addControl(Separator, "", "", None, settingTab);
@@ -296,7 +297,7 @@ void _initsht() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "1.5";
+  FirmwareVer = "1.6";
   Serial.begin(115200);
   Wire.begin();
   _initsht();
@@ -314,6 +315,7 @@ void setup() {
   WiFi.softAPConfig(IPAddress(192, 168, 1, 1), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
   WiFi.softAP(HOSTNAME);
   setUpUI();
+  ESPUI.updateLabel(firmwarelabel, String(FirmwareVer));
   delay(200);
   readEEPROM();
   Serial.println("debugendSetUP");
