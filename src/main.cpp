@@ -59,7 +59,7 @@ uint16_t wifi_ssid_text, wifi_pass_text;
 uint16_t nameLabel, idLabel, grouplabel, grouplabel2, mainSwitcher, mainSlider, mainText, settingZNumber, resultButton, mainTime, downloadButton, selectDownload, logStatus;
 //  uint16_t styleButton, styleLabel, styleSwitcher, styleSlider, styleButton2, styleLabel2, styleSlider2;
 uint16_t tempText, humText, humText2, saveConfigButton, interval ,emailText1, cuationlabel, lineText;
-uint16_t bmeLog, wifiLog, teleLog;
+uint16_t shtLog, wifiLog, teleLog;
 
 uint16_t graph;
 volatile bool updates = false;
@@ -93,7 +93,7 @@ int PORT = 1883;
 float temp(NAN), hum(NAN), pres(NAN);
 int TempOffset = 0;
 int HumOffset1 = 0;
-String bmeStatus = "";
+String shtStatus = "";
 String mqttStatus = "";
 
 void configModeCallback (WiFiManager *myWiFiManager) {
@@ -159,7 +159,7 @@ void setUpUI() {
   auto eventTab = ESPUI.addControl(Tab, "", "Event Log");
   ESPUI.addControl(Separator, "Error Log", "", None, eventTab);
   teleLog = ESPUI.addControl(Label, "Server Connection Status", String(mqttStatus), Alizarin, eventTab, enterDetailsCallback);
-  bmeLog = ESPUI.addControl(Label, "Sensor Connection Status", String(bmeStatus), Alizarin, eventTab, enterDetailsCallback); 
+  shtLog = ESPUI.addControl(Label, "Sensor Connection Status", String(shtStatus), Alizarin, eventTab, enterDetailsCallback); 
 
   //Finally, start up the UI.
   //This should only be called once we are connected to WiFi.
@@ -238,7 +238,7 @@ void enterDetailsCallback(Control *sender, int type) {
 
 void readEEPROM() {
   Serial.println("Reading credentials from EEPROM...");
-  EEPROM.begin(100); // Ensure enough size for data
+  EEPROM.begin(150); // Ensure enough size for data
   
   //Dubug Address
     /*
@@ -284,12 +284,22 @@ void readEEPROM() {
   ESPUI.updateText(lineText, String(lineID));
 }
 
+void _initsht() {
+  if (!sht31.begin(0x44)) {
+    shtStatus = "SHT31 sensor not found";
+    ESPUI.updateLabel(shtLog, String(shtStatus));
+  } else {
+    shtStatus = "SHT31 sensor initialized";
+    ESPUI.updateLabel(shtLog, String(shtStatus));
+  }
+}
+
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "1.0";
+  FirmwareVer = "1.5";
   Serial.begin(115200);
   Wire.begin();
-  sht31.begin(0x44);
+  _initsht();
   Serial.println(F("Starting... SHT20 TEMP/HUM_RS485 Monitor"));
   wifiManager.setAPCallback(configModeCallback);
   if (!wifiManager.autoConnect("SmartEnv:4c:75:25:56:a1:84")) {
@@ -313,18 +323,8 @@ void loop() {
    const unsigned long time2send = periodSendTelemetry * 1000;
   // Check telemetry timing
   if (millis() % time2send == 0) {
-    OTA_git_CALL();
+    
     json = "";
-    status = WiFi.status();
-    if (status == WL_CONNECTED) {
-      if (!client.connected()) {
-        Serial.println("Client disconnected, attempting to reconnect...");
-        reconnectMqtt();
-      }
-      client.loop(); // Process MQTT messages
-    } else {
-      Serial.println("WiFi disconnected");
-    }
     Serial.println("Sending telemetry...");
     temp = sht31.readTemperature() + (TempOffset / 100);
     hum = sht31.readHumidity() + (HumOffset1 / 100);
@@ -346,8 +346,20 @@ void loop() {
     //sendtelemetry();  // Function to send the telemetry data
     Serial.println("Telemetry sent");
   }
-   if (millis() % 10000 == 0) {
+  
+  if (millis() % 10000 == 0) {
+    OTA_git_CALL();
     heartBeat();
+    status = WiFi.status();
+    if (status == WL_CONNECTED) {
+      if (!client.connected()) {
+        Serial.println("Client disconnected, attempting to reconnect...");
+        reconnectMqtt();
+      }
+      client.loop(); // Process MQTT messages
+    } else {
+      Serial.println("WiFi disconnected");
+    }
   }
 }
 
