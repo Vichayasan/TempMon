@@ -297,7 +297,7 @@ void _initsht() {
 
 void setup() {
   Project = "TempMon";
-  FirmwareVer = "1.6";
+  FirmwareVer = "1.9";
   Serial.begin(115200);
   Wire.begin();
   _initsht();
@@ -321,10 +321,11 @@ void setup() {
   Serial.println("debugendSetUP");
 }
 
-void loop() {  
-   const unsigned long time2send = periodSendTelemetry * 1000;
+void loop() {
+  const unsigned long currentMillis = millis();
+  const unsigned long time2send = periodSendTelemetry * 1000;
   // Check telemetry timing
-  if (millis() % time2send == 0) {
+  if (currentMillis % time2send == 0) {
     
     json = "";
     Serial.println("Sending telemetry...");
@@ -349,8 +350,8 @@ void loop() {
     Serial.println("Telemetry sent");
   }
   
-  if (millis() % 10000 == 0) {
-    OTA_git_CALL();
+  if (currentMillis % 10000 == 0) {
+    //OTA_git_CALL();
     heartBeat();
     status = WiFi.status();
     if (status == WL_CONNECTED) {
@@ -362,6 +363,10 @@ void loop() {
     } else {
       Serial.println("WiFi disconnected");
     }
+  }
+
+  if (currentMillis % 600000 == 0) {
+    OTA_git_CALL();
   }
 }
 
